@@ -1,0 +1,1 @@
+{"private":true,"name":"devmuse-demo-browser-tests","scripts":{"test:e2e":"playwright test"},"devDependencies":{"@playwright/test":"^1.56.0"}}
