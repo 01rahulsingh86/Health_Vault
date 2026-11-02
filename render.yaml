@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: health-vault
+    env: node
+    plan: starter
+    region: oregon
+    buildCommand: npm install
+    startCommand: node server/index.js
+    healthCheckPath: /healthz
+    autoDeploy: true
+    disk:
+      name: health-vault-data
+      mountPath: /data
+      sizeGB: 10
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATA_DIR
+        value: /data
+      - key: COOKIE_SECURE
+        value: true
+      - key: TRUST_PROXY
+        value: "1"
+      - key: ALLOW_REGISTRATION
+        value: true
+      - key: PUBLIC_ACCESS_MODE
+        value: off
