@@ -122,6 +122,13 @@ const sourceMeta = (r = {}) => [
   r.facility_name ? `Facility: ${r.facility_name}` : '',
   r.facility_address ? `Address: ${r.facility_address}` : '',
 ].filter(Boolean);
+const singleMetaTile = (r = {}) => {
+  const bits = sourceMeta(r);
+  if (!bits.length) return '';
+  const primary = bits.slice(0, 2).join(' · ');
+  const secondary = bits.slice(2);
+  return `<div class="source-tile"><span class="meta-label">Latest report</span><strong>${esc(primary)}</strong>${secondary.length ? `<div class="source-inline">${secondary.map((s) => `<span>${esc(s)}</span>`).join('')}</div>` : ''}</div>`;
+};
 
 // ---------- status / gauge ----------
 function statusOf(m) {
@@ -470,15 +477,17 @@ const deltaTxt = (e) => {
   return `${d > 0 ? '▲' : d < 0 ? '▼' : '＝'} ${d > 0 ? '+' : ''}${fmt(d)} (${d > 0 ? '+' : ''}${pc.toFixed(1)}%) since ${fmtDate(e.prev.date)}`;
 };
 function card(e) {
-  const L = e.last, sourceBits = sourceMeta(L || e.source || {});
-  return `<button class="trend" data-k="${esc(e.key)}"><div class="t1"><b>${esc(e.name)}</b>${pill(e.s)}</div><div class="big ${e.s === 'high' ? 'hi' : e.s === 'low' ? 'lo' : ''}">${fmt(L.value)} <span class="un mut" style="font-size:.9rem;font-weight:500">${esc(e.unit)}</span></div>
-  ${e.pts.length > 1 ? chart(e, false) : gauge({ value: L.value, low: L.low, high: L.high }) || '<div style="height:10px"></div>'}${sourceBits.length ? `<div class="source-strip compact">${sourceBits.map((s) => `<span>${esc(s)}</span>`).join('')}</div>` : ''}<div class="delta">${esc(deltaTxt(e))}</div></button>`;
+  const L = e.last;
+  const meta = singleMetaTile(L || e.source || {});
+  return `<button class="trend" data-k="${esc(e.key)}"><div class="trend-shell"><div class="trend-meta">${meta}</div><div class="trend-body"><div class="t1"><b>${esc(e.name)}</b>${pill(e.s)}</div><div class="big ${e.s === 'high' ? 'hi' : e.s === 'low' ? 'lo' : ''}">${fmt(L.value)} <span class="un mut" style="font-size:.9rem;font-weight:500">${esc(e.unit)}</span></div>
+  ${e.pts.length > 1 ? chart(e, false) : gauge({ value: L.value, low: L.low, high: L.high }) || '<div style="height:10px"></div>'}<div class="delta">${esc(deltaTxt(e))}</div></div></div></button>`;
 }
 function openDetail(e) {
-  const dlg = document.createElement('dialog'), L = e.last, sourceBits = sourceMeta(L || e.source || {});
+  const dlg = document.createElement('dialog'), L = e.last;
+  const meta = singleMetaTile(L || e.source || {});
   dlg.innerHTML = `<div class="sheet"><div class="between"><h2 style="margin:0">${esc(e.name)}</h2><button class="sec sm" id="x" aria-label="Close">Close</button></div>
-  <div class="big ${e.s === 'high' ? 'hi' : e.s === 'low' ? 'lo' : ''}" style="font-size:2.2rem;font-weight:700;margin:6px 0">${fmt(L.value)} <span class="mut" style="font-size:1rem">${esc(e.unit)}</span> ${pill(e.s)}</div>
-  <p class="mut" style="margin:0 0 8px">${esc(deltaTxt(e))}</p>${sourceBits.length ? `<div class="source-strip">${sourceBits.map((s) => `<span>${esc(s)}</span>`).join('')}</div>` : ''}${e.pts.length > 1 ? chart(e, true) + '<p class="mut">Shaded band = normal range from your latest report.</p>' : gauge({ value: L.value, low: L.low, high: L.high })}
+  <div class="trend-detail-layout">${meta ? `<div class="trend-detail-meta">${meta}</div>` : ''}<div class="trend-detail-main"><div class="big ${e.s === 'high' ? 'hi' : e.s === 'low' ? 'lo' : ''}" style="font-size:2.2rem;font-weight:700;margin:6px 0">${fmt(L.value)} <span class="mut" style="font-size:1rem">${esc(e.unit)}</span> ${pill(e.s)}</div>
+  <p class="mut" style="margin:0 0 8px">${esc(deltaTxt(e))}</p>${e.pts.length > 1 ? chart(e, true) + '<p class="mut">Shaded band = normal range from your latest report.</p>' : gauge({ value: L.value, low: L.low, high: L.high })}</div></div>
   ${e.about ? `<div class="about"><strong>What is this?</strong> ${esc(e.about)}</div>` : ''}
   <h3 style="margin-top:16px">History</h3><table class="hist">${[...e.pts].reverse().map((p) => `<tr><td>${esc(fmtDate(p.date, { day: 'numeric', month: 'short', year: 'numeric' }))}<br><span class="mut">${esc(p.title)}</span></td><td><strong class="${p.s === 'high' ? 'hi' : p.s === 'low' ? 'lo' : ''}">${fmt(p.value)} ${esc(e.unit)}</strong> ${pill(p.s)}</td></tr>`).join('')}</table></div>`;
   document.body.appendChild(dlg); dlg.showModal();
