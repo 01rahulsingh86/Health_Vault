@@ -478,9 +478,8 @@ const deltaTxt = (e) => {
 };
 function card(e) {
   const L = e.last;
-  const meta = singleMetaTile(L || e.source || {});
-  return `<button class="trend" data-k="${esc(e.key)}"><div class="trend-shell"><div class="trend-meta">${meta}</div><div class="trend-body"><div class="t1"><b>${esc(e.name)}</b>${pill(e.s)}</div><div class="big ${e.s === 'high' ? 'hi' : e.s === 'low' ? 'lo' : ''}">${fmt(L.value)} <span class="un mut" style="font-size:.9rem;font-weight:500">${esc(e.unit)}</span></div>
-  ${e.pts.length > 1 ? chart(e, false) : gauge({ value: L.value, low: L.low, high: L.high }) || '<div style="height:10px"></div>'}<div class="delta">${esc(deltaTxt(e))}</div></div></div></button>`;
+  return `<button class="trend" data-k="${esc(e.key)}"><div class="trend-body"><div class="t1"><b>${esc(e.name)}</b>${pill(e.s)}</div><div class="big ${e.s === 'high' ? 'hi' : e.s === 'low' ? 'lo' : ''}">${fmt(L.value)} <span class="un mut" style="font-size:.9rem;font-weight:500">${esc(e.unit)}</span></div>
+  ${e.pts.length > 1 ? chart(e, false) : gauge({ value: L.value, low: L.low, high: L.high }) || '<div style="height:10px"></div>'}<div class="delta">${esc(deltaTxt(e))}</div></div></button>`;
 }
 function openDetail(e) {
   const dlg = document.createElement('dialog'), L = e.last;
@@ -504,11 +503,14 @@ function viewTrends() {
   const att = list.filter((e) => e.s === 'high' || e.s === 'low').sort((a, b) => b.pts.length - a.pts.length);
   const rest = list.filter((e) => !att.includes(e)).sort((a, b) => b.pts.length - a.pts.length || a.name.localeCompare(b.name));
   const multi = list.filter((e) => e.pts.length > 1).length;
-  v.innerHTML = `<div class="chips" role="group" aria-label="Filter">${['', ...cats].map((c) => `<button class="chip ${S.tcat === c ? 'on' : ''}" data-c="${esc(c)}">${c ? esc(c) : 'All'}</button>`).join('')}</div>
+  const latestReport = [...S.records].sort((a, b) => b.date.localeCompare(a.date))[0];
+  const latestMeta = latestReport ? singleMetaTile(latestReport) : '';
+  v.innerHTML = `<div class="trend-dashboard">${latestMeta ? `<aside class="trend-sidebar" aria-label="Latest report details">${latestMeta}</aside>` : ''}<div class="trend-content">
+  <div class="chips" role="group" aria-label="Filter">${['', ...cats].map((c) => `<button class="chip ${S.tcat === c ? 'on' : ''}" data-c="${esc(c)}">${c ? esc(c) : 'All'}</button>`).join('')}</div>
   <div class="stats"><div class="glass stat"><b>${list.length}</b><span>TRACKED</span></div><div class="glass stat"><b class="${att.length ? 'hi' : 'ok'}">${att.length}</b><span>NEED A LOOK</span></div><div class="glass stat"><b>${multi}</b><span>WITH HISTORY</span></div></div>
   ${att.length ? `<div class="sec-t">Needs attention</div><div class="grid">${att.map(card).join('')}</div>` : ''}
   ${rest.length ? `<div class="sec-t">${att.length ? 'Everything else' : 'All results'}</div><div class="grid">${rest.map(card).join('')}</div>` : ''}
-  <p class="disclaimer">Out-of-range values are worth discussing with your clinician; they aren’t a diagnosis. Tap a card for its full history and an explanation.</p>`;
+  <p class="disclaimer">Out-of-range values are worth discussing with your clinician; they aren’t a diagnosis. Tap a card for its full history and an explanation.</p></div></div>`;
   v.querySelectorAll('.chip').forEach((b) => (b.onclick = () => { S.tcat = b.dataset.c; viewTrends(); }));
   v.querySelectorAll('.trend').forEach((b) => (b.onclick = () => openDetail(all.find((e) => e.key === b.dataset.k))));
 }
