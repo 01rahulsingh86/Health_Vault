@@ -17,10 +17,12 @@ let encKey = need('ENC_KEY');
 encKey = encKey ? Buffer.from(encKey, 'base64') : crypto.randomBytes(32);
 if (encKey.length !== 32) { console.error('FATAL: ENC_KEY must be 32 bytes, base64-encoded'); process.exit(1); }
 
+const defaultDataDir = isProd ? '/data' : path.resolve(process.cwd(), 'data');
+
 module.exports = {
   isProd,
   port: +process.env.PORT || 3000,
-  dataDir: path.resolve(process.env.DATA_DIR || './data'),
+  dataDir: path.resolve(process.env.DATA_DIR || defaultDataDir),
   jwtSecret: need('JWT_SECRET') || crypto.randomBytes(32).toString('hex'),
   encKey,
   anthropicKey: process.env.ANTHROPIC_API_KEY || null,
