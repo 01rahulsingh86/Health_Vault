@@ -224,6 +224,8 @@ function renderAuth(msg = '') {
 
 // ---------- shell ----------
 const TABS = [['trends', 'Trends'], ['records', 'Records'], ['add', 'Add'], ['ask', 'Ask AI'], ['account', 'Account']];
+const AI_DISABLED_COPY = 'AI is turned off on this server. To enable it, the app owner needs to add an Anthropic API key on the server. You cannot enable it from your account or browser-only settings.';
+
 function render() {
   app.innerHTML = `<header class="page-header">
     <div class="brand-block">
@@ -333,7 +335,7 @@ function viewAdd() {
   <div class="row"><button type="button" id="cam">📷 Take photo</button><button type="button" class="sec" id="pick">📁 Choose files</button></div>
   <input type="file" id="camIn" class="hide" accept="image/*" capture="environment"><input type="file" id="pickIn" class="hide" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic" multiple>
   <p class="mut" id="fcount" style="margin:12px 0 0"></p><div class="thumbs" id="thumbs"></div></div>
-  ${S.me.aiEnabled ? `<button class="full" id="ai" style="margin-top:14px" data-l="✨ Read ${edit ? 'new files' : 'report'} with AI">✨ Read ${edit ? 'new files' : 'report'} with AI</button><p class="mut" style="margin:8px 0 0">Files are sent to Anthropic’s API to be read. Always double-check the numbers.</p>` : '<p class="mut">AI reading isn’t configured on this server — enter values manually below.</p>'}
+  ${S.me.aiEnabled ? `<button class="full" id="ai" style="margin-top:14px" data-l="✨ Read ${edit ? 'new files' : 'report'} with AI">✨ Read ${edit ? 'new files' : 'report'} with AI</button><p class="mut" style="margin:8px 0 0">Files are sent to Anthropic’s API to be read. Always double-check the numbers.</p>` : `<div class="notice warn" role="status"><strong>AI is off right now.</strong><br>${esc(AI_DISABLED_COPY)}</div><p class="mut" style="margin:8px 0 0">You can continue by entering the details manually below.</p>`}
   <div id="notice"></div>
   <div class="row"><div><label for="title">Title</label><input id="title" maxlength="200" placeholder="e.g. Annual blood test" value="${esc(r.title)}"></div>
   <div><label for="cat">Category</label><select id="cat">${S.me.categories.map((c) => `<option ${r.category === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
@@ -515,7 +517,7 @@ function viewAsk(pending) {
   ${S.chat.length ? '' : `<div class="chips">${SUGGEST.map((s) => `<button class="chip" data-s="${esc(s)}" ${on ? '' : 'disabled'}>${esc(s)}</button>`).join('')}</div>`}
   <div aria-live="polite">${S.chat.map((c) => `<div class="chat ${c.q ? 'me' : 'ai'}">${c.q ? esc(c.q) : formatAiText(c.a)}</div>`).join('')}${pending ? '<div class="chat ai"><span class="spinner"></span></div>' : ''}</div>
   <form id="qf" class="row" style="margin-top:14px"><input id="q" maxlength="1000" placeholder="Ask anything about your results…" aria-label="Question" style="flex:4 1 220px" ${on ? '' : 'disabled'}><button style="flex:1 1 90px" ${on ? '' : 'disabled'}>Ask</button></form>
-  <p class="disclaimer">${on ? '' : 'AI isn’t configured on this server. '}Information only — not medical advice.</p></div>`;
+  <p class="disclaimer">${on ? 'Information only — not medical advice.' : AI_DISABLED_COPY}</p></div>`;
   v.querySelectorAll('[data-s]').forEach((b) => (b.onclick = () => ask(b.dataset.s)));
   $('#qf').onsubmit = (e) => { e.preventDefault(); const q = $('#q').value.trim(); if (q) ask(q); };
 }
@@ -526,6 +528,7 @@ function viewAccount() {
   const current = plan === 'pro' ? 'Pro plan' : 'Free plan';
   const usage = plan === 'pro' ? 'Unlimited AI reads and reports' : `${S.me.recordsUsed || 0}/${S.me.recordsLimit || 0} reports · ${S.me.aiUsed || 0}/${S.me.aiLimit || 0} AI reads`;
   $('#view').innerHTML = `<div class="glass card"><h2>Account</h2><p class="mut">Signed in as ${esc(S.me.email)}</p><div class="plan-card"><strong>${esc(current)}</strong><span>${esc(usage)}</span></div><div class="row"><a class="btn sec" href="/api/export" download>Export my data</a><button class="sec" id="out">Sign out</button></div></div>
+  <div class="glass card"><h2>AI status</h2>${S.me.aiEnabled ? '<p class="mut">AI is enabled on this server. Your uploaded files can be read with Anthropic.</p>' : `<div class="notice warn" role="status"><strong>AI is off.</strong><br>${esc(AI_DISABLED_COPY)}</div>`}<p class="mut" style="margin-top:10px">If you want AI summaries for your reports, the app owner must add the server key in the deployment settings.</p></div>
   <div class="glass card"><h2>Change password</h2><form id="pf"><label for="cur">Current password</label><input id="cur" type="password" autocomplete="current-password"><label for="nw">New password · 10+ characters</label><input id="nw" type="password" autocomplete="new-password"><p class="err" id="perr" role="alert"></p><button data-l="Update password">Update password</button></form></div>
   <div class="glass card"><h2>Delete account</h2><p class="mut">Permanently erases your account, reports and files.</p><label for="dp">Confirm password</label><input id="dp" type="password" autocomplete="current-password"><p class="err" id="derr" role="alert"></p><button class="danger" id="del">Delete everything</button></div>`;
   $('#out').onclick = async () => { await api('/auth/logout', { method: 'POST' }); S.me = null; S.records = []; S.chat = []; S.draft = null; renderAuth(); };

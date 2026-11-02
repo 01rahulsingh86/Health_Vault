@@ -42,6 +42,12 @@ body {
   color: var(--tx);
   font: 16px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
   padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+  overflow-x: hidden;
+}
+#app {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 body::before {
   content: "";
@@ -369,6 +375,36 @@ nav.tabs svg { width: 18px; height: 18px; }
   }
   .hero-copy h1 {
     font-size: 2.1rem;
+  }
+  .wrap {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  nav.tabs {
+    gap: 4px;
+    padding: 6px;
+  }
+  nav.tabs button {
+    font-size: 0.72rem;
+    padding: 9px 8px;
+  }
+  button, input, select, textarea {
+    font-size: 16px;
+  }
+  .card {
+    padding: 14px 12px;
+  }
+  .page-header {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .auth-card {
+    padding: 18px 14px;
   }
 }
 
